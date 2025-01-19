@@ -1,17 +1,11 @@
 syntax = "proto3";
-package rmtp;
+package pb;
 option go_package = "./rmtp/";
 
 message Version {
   int32 major = 1;
   int32 minor = 2;
   int32 patch = 3;
-}
-
-message Time {
-  int32 hour = 1;
-  int32 minute = 2;
-  int32 second = 3;
 }
 
 message FileMetadata {
@@ -33,24 +27,54 @@ message AcknowledgementMessage {
   int32 messageId = 1;
 }
 
-enum Reason {
-  CHUNK_CORRUPTED = 0;
-  HASH_MISMATCH = 1;
-  PROTOCOL_ERROR = 2;
-  FILE_CORRUPTED = 3;
-  UNKNOWN = 4;
+enum Errors {
+  TAMPERED = 0;
+  CONNECTION_TIMEOUT = 1;
+  CONNECTION_DROPOUT = 2;
+  CHUNK_MISSING = 3;
+  INCOMPLETE_DATA = 4;
+  BUFFER_OVERFLOW = 5;
+  HIGH_LATENCY = 6;
+  DUPLICATE_MESSAGE = 7;
+  ACKNOWLEDGEMENT_FAILURE = 8;
+  INTERNAL_ERROR = 9;
 }
 message ErrorMessage {
-  Reason reason = 1;
-  bool resend = 2;
+  Errors error = 1;
+}
+
+enum State {
+  READY = 0;
+  WAITING = 1;
+}
+
+message StreamInit {
+  State state = 1;
+}
+
+enum Requests {
+  STATE = 0;
+}
+message Request {
+  Requests state = 1; 
+}
+
+message Stream {
+  int32 chunkId = 1;
+  bytes data = 2;
+  bytes hash = 3;
 }
 
 message Frame {
-  bool retry = 1;
+  optional int32 messageId = 1;
+  optional bool retry = 2;
   oneof payload {
-    ServerInit serverInit = 2;
-    ClientInit clientInit = 3;
-    AcknowledgementMessage acknowledgement = 4;
-    ErrorMessage errorMessage = 5;
+    ServerInit serverInit = 3;
+    ClientInit clientInit = 4;
+    AcknowledgementMessage acknowledgement = 5;
+    ErrorMessage errorMessage = 6;
+    StreamInit sreamInit = 7;
+    Stream stream = 8;
+    Request request = 9;
   }
 }
