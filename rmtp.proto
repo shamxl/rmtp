@@ -1,0 +1,56 @@
+syntax = "proto3";
+package rmtp;
+option go_package = "./rmtp/";
+
+message Version {
+  int32 major = 1;
+  int32 minor = 2;
+  int32 patch = 3;
+}
+
+message Time {
+  int32 hour = 1;
+  int32 minute = 2;
+  int32 second = 3;
+}
+
+message FileMetadata {
+  string fileName = 1;
+  int32 fileSize = 2;
+  int32 chunkSize = 3;
+  int32 totalChunks = 4;
+}
+
+message ServerInit {
+  Version version = 1;
+  FileMetadata fileMetadata = 2;
+}
+message ClientInit {
+  Version version = 1;
+}
+
+message AcknowledgementMessage {
+  int32 messageId = 1;
+}
+
+enum Reason {
+  CHUNK_CORRUPTED = 0;
+  HASH_MISMATCH = 1;
+  PROTOCOL_ERROR = 2;
+  FILE_CORRUPTED = 3;
+  UNKNOWN = 4;
+}
+message ErrorMessage {
+  Reason reason = 1;
+  bool resend = 2;
+}
+
+message Frame {
+  bool retry = 1;
+  oneof payload {
+    ServerInit serverInit = 2;
+    ClientInit clientInit = 3;
+    AcknowledgementMessage acknowledgement = 4;
+    ErrorMessage errorMessage = 5;
+  }
+}
